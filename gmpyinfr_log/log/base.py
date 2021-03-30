@@ -51,14 +51,16 @@ class BaseLogger(metaclass=SingletonMeta):
         self.logger = logging.getLogger("base")
 
         # redireciona os métodos do log
-        self.__levels = ['debug', 'info', 'warning', 'error', 'critical', 'exception']
+        self.harmless_levels = ['debug', 'info', 'warning']
+        self.error_levels = ['error', 'critical', 'exception']
+        self.__levels = self.harmless_levels + self.error_levels
         for level in self.__levels:
             self.__create_log_method_for_level(level)
 
     def log(self, **kwargs):
         """
         Método log que deve ser implementado pelas Child Classes para ser invocado
-        antes da utilização do logging python.
+        após da utilização do logging python.
         """
 
         pass
@@ -67,8 +69,9 @@ class BaseLogger(metaclass=SingletonMeta):
         """Faz a criação dos métodos de log para esta classe."""
 
         def logml(msg, *args, **kwargs):
-            self.log(**kwargs)
             func = getattr(self.logger, level)
-            return func(msg, *args, **kwargs)
+            rtn = func(msg, *args, **kwargs)
+            self.log(msg=msg, level=level.upper(), **kwargs)
+            return rtn
 
         setattr(self, level, logml)
